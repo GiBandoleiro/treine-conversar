@@ -144,20 +144,21 @@
 
         // --- DADOS DOS IDIOMAS ---
         const languages = [
-            { code: 'pt-BR', name: 'Português', flag: 'https://flagcdn.com/w320/br.png', voiceName: 'Google português do Brasil' },
-            { code: 'en-US', name: 'English', flag: 'https://flagcdn.com/w320/us.png', voiceName: 'Google US English' },
-            { code: 'es-ES', name: 'Español', flag: 'https://flagcdn.com/w320/es.png', voiceName: 'Google español' },
-            { code: 'fr-FR', name: 'Français', flag: 'https://flagcdn.com/w320/fr.png', voiceName: 'Google français' },
-            { code: 'de-DE', name: 'Deutsch', flag: 'https://flagcdn.com/w320/de.png', voiceName: 'Google Deutsch' },
-            { code: 'it-IT', name: 'Italiano', flag: 'https://flagcdn.com/w320/it.png', voiceName: 'Google italiano' },
-            { code: 'ja-JP', name: '日本語', flag: 'https://flagcdn.com/w320/jp.png', voiceName: 'Google 日本語' },
-            { code: 'ko-KR', name: '한국어', flag: 'https://flagcdn.com/w320/kr.png', voiceName: 'Google 한국의' },
+            { code: 'pt-BR', name: 'Português', flag: 'https://flagcdn.com/w320/br.png' },
+            { code: 'en-US', name: 'English', flag: 'https://flagcdn.com/w320/us.png' },
+            { code: 'es-ES', name: 'Español', flag: 'https://flagcdn.com/w320/es.png' },
+            { code: 'fr-FR', name: 'Français', flag: 'https://flagcdn.com/w320/fr.png' },
+            { code: 'de-DE', name: 'Deutsch', flag: 'https://flagcdn.com/w320/de.png' },
+            { code: 'it-IT', name: 'Italiano', flag: 'https://flagcdn.com/w320/it.png' },
+            { code: 'ja-JP', name: '日本語', flag: 'https://flagcdn.com/w320/jp.png' },
+            { code: 'ko-KR', name: '한국어', flag: 'https://flagcdn.com/w320/kr.png' },
         ];
 
         let selectedLanguage = null;
         let recognition = null;
         let isListening = false;
         let finalTranscript = '';
+        let availableVoices = [];
         
         // --- API DO GEMINI ---
         const apiKey = "AIzaSyA0LecQ2UW0nZvLTlnp-Utp4NHxVeIfvX8"; // Chave de API inserida
@@ -168,6 +169,7 @@
             initializeLanguageButtons();
             setupEventListeners();
             setupSpeechAPI();
+            setupTTS();
         });
         
         function initializeLanguageButtons() {
@@ -293,25 +295,38 @@
             }
         }
         
+        function setupTTS() {
+            function loadVoices() {
+                availableVoices = speechSynthesis.getVoices();
+                console.log("Vozes disponíveis:", availableVoices.map(v => `${v.name} (${v.lang})`));
+            }
+            if (typeof speechSynthesis !== 'undefined') {
+                loadVoices(); // Tenta carregar imediatamente
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
         function speak(text) {
-            if (!text || typeof speechSynthesis === 'undefined') return;
+            if (!text || typeof speechSynthesis === 'undefined' || !selectedLanguage) return;
             speechSynthesis.cancel(); 
             const utterance = new SpeechSynthesisUtterance(text);
-            const voices = speechSynthesis.getVoices();
-            // Tenta encontrar a voz de alta qualidade específica do Google primeiro.
-            let desiredVoice = voices.find(v => v.name === selectedLanguage.voiceName);
-            // Se não encontrar, procura qualquer voz que corresponda ao código do idioma.
+
+            // Tenta encontrar uma voz exata para o código de idioma (ex: 'pt-BR')
+            let desiredVoice = availableVoices.find(v => v.lang === selectedLanguage.code);
+            
+            // Se não encontrar, tenta encontrar uma voz para o idioma base (ex: 'pt')
             if (!desiredVoice) {
-                desiredVoice = voices.find(v => v.lang === selectedLanguage.code);
+                const langBase = selectedLanguage.code.split('-')[0];
+                desiredVoice = availableVoices.find(v => v.lang.startsWith(langBase));
             }
-            utterance.voice = desiredVoice;
+
+            if (desiredVoice) {
+                utterance.voice = desiredVoice;
+            }
+            
+            // Define o idioma para garantir a pronúncia correta
             utterance.lang = selectedLanguage.code;
             speechSynthesis.speak(utterance);
-        }
-        
-        // Garante que a lista de vozes seja carregada.
-        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
-             speechSynthesis.onvoiceschanged = () => console.log("Vozes de TTS carregadas.");
         }
 
         // --- LÓGICA DO CHAT E DA IA ---
@@ -514,3 +529,4 @@ Responda SEMPRE em um objeto JSON válido com três chaves: "pronunciationFeedba
     </script>
 </body>
 </html>
+
