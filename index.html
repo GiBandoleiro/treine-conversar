@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Favicon (Ícone da Aba) -->
+    <link rel="icon" type="image/png" href="logoTerra.png">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -152,8 +154,8 @@
         let finalTranscript = '';
         
         // --- API DO GEMINI ---
-        const apiKey = "AIzaSyA0LecQ2UW0nZvLTlnp-Utp4NHxVeIfvX8"; // Chave de API inserida
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+        const arquivo_gerado = "AIzaSyA0LecQ2UW0nZvLTlnp-Utp4NHxVeIfvX8"; // Chave de API inserida
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${arquivo_gerado}`;
 
         // --- INICIALIZAÇÃO DA APLICAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -414,12 +416,12 @@
         async function callGeminiAPI(text) {
             showThinkingIndicator();
 
-            if (!apiKey) {
+            if (!arquivo_gerado) {
                 const thinkingIndicator = document.getElementById('thinking');
                 if (thinkingIndicator) thinkingIndicator.remove();
                 const keyErrorMessage = selectedLanguage.code === 'pt-BR' 
-                    ? "Por favor, adicione sua chave de API do Google AI Studio na variável 'apiKey' no código para começar." 
-                    : "Please add your Google AI Studio API key to the 'apiKey' variable in the code to get started.";
+                    ? "Por favor, adicione sua chave de API do Google AI Studio na variável 'arquivo_gerado' no código para começar." 
+                    : "Please add your Google AI Studio API key to the 'arquivo_gerado' variable in the code to get started.";
                 addAiMessage(null, keyErrorMessage, null);
                 return;
             }
