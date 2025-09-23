@@ -289,21 +289,55 @@
             }
         }
         
-        function speak(text) {
-            if (!text || typeof speechSynthesis === 'undefined') return;
-            speechSynthesis.cancel(); 
-            const utterance = new SpeechSynthesisUtterance(text);
-            const voices = speechSynthesis.getVoices();
-            // Tenta encontrar a voz de alta qualidade específica do Google primeiro.
-            let desiredVoice = voices.find(v => v.name === selectedLanguage.voiceName);
-            // Se não encontrar, procura qualquer voz que corresponda ao código do idioma.
-            if (!desiredVoice) {
-                desiredVoice = voices.find(v => v.lang === selectedLanguage.code);
-            }
-            utterance.voice = desiredVoice;
-            utterance.lang = selectedLanguage.code;
-            speechSynthesis.speak(utterance);
+        async function speak(text) {
+    if (!text) return;
+
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        // Usa Gemini TTS no celular
+        try {
+            const ttsUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${arquivo_gerado}`;
+            const payload = {
+                contents: [{ role: "user", parts: [{ text }] }],
+                audioConfig: { audioEncoding: "MP3" }
+            };
+
+            const response = await fetch(ttsUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error("Erro TTS Gemini");
+
+            const result = await response.json();
+            const audioBase64 = result.candidates[0].content.parts[0].inlineData.data;
+            const audioBlob = new Blob(
+                [Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0))],
+                { type: "audio/mp3" }
+            );
+            const url = URL.createObjectURL(audioBlob);
+            const audio = new Audio(url);
+            audio.play();
+
+        } catch (err) {
+            console.error("Erro ao gerar voz no Gemini TTS:", err);
         }
+    } else {
+        // Desktop → mantém SpeechSynthesis (já está humanizado)
+        speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        const voices = speechSynthesis.getVoices();
+        let desiredVoice = voices.find(v => v.name === selectedLanguage.voiceName);
+        if (!desiredVoice) {
+            desiredVoice = voices.find(v => v.lang === selectedLanguage.code);
+        }
+        utterance.voice = desiredVoice;
+        utterance.lang = selectedLanguage.code;
+        speechSynthesis.speak(utterance);
+    }
+}
         
         // Garante que a lista de vozes seja carregada.
         if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
