@@ -292,10 +292,10 @@
         async function speak(text) {
     if (!text) return;
 
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    if (isMobile) {
-        // Usa Gemini TTS no celular
+    if (isIOS) {
+        // Força Gemini TTS no Safari iOS
         try {
             const ttsUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${arquivo_gerado}`;
             const payload = {
@@ -325,7 +325,7 @@
             console.error("Erro ao gerar voz no Gemini TTS:", err);
         }
     } else {
-        // Desktop → mantém SpeechSynthesis (já está humanizado)
+        // Desktop → mantém SpeechSynthesis
         speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         const voices = speechSynthesis.getVoices();
