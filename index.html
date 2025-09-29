@@ -380,8 +380,18 @@
             };
             
             recognition.onerror = (event) => {
-                console.error('Erro no reconhecimento de voz:', event.error);
-                micStatus.textContent = 'Erro. Tente novamente.';
+                console.error('Erro no reconhecimento de voz:', event.error, event);
+                let errorMessage = 'Erro desconhecido. Tente novamente.';
+
+                if (event.error === 'not-allowed') {
+                    errorMessage = 'Acesso ao microfone negado! Por favor, ative as permissões no seu navegador.';
+                } else if (event.error === 'no-speech') {
+                    errorMessage = 'Nenhuma fala detectada. Tente falar mais alto ou claro.';
+                } else if (event.error === 'network') {
+                    errorMessage = 'Erro de rede. Verifique sua conexão.';
+                }
+
+                micStatus.textContent = errorMessage;
             };
 
             recognition.onresult = (event) => {
